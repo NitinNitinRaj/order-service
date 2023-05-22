@@ -1,5 +1,7 @@
 package com.polarbookshop.orderservice.book;
 
+import java.time.Duration;
+
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -19,6 +21,7 @@ public class BookClient {
       .get()
       .uri(BOOK_ROOT_API + isbn)
       .retrieve()
-      .bodyToMono(Book.class);
+      .bodyToMono(Book.class)
+      .timeout(Duration.ofSeconds(3));
   }
 }
