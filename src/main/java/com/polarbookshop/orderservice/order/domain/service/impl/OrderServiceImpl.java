@@ -37,21 +37,11 @@ public class OrderServiceImpl implements OrderService {
     //   .just(buildRejectedOrder(isbn, quantity))
     //   .flatMap(orderRepository::save);
 
-    return bookClient.getBookByIsbn(isbn)
-    .flatMap(book -> {
-        // Book found, build and save accepted order
-        Order acceptedOrder = buildAcceptedOrder(book, quantity);
-        return orderRepository.save(acceptedOrder);
-    })
-    .onErrorResume(WebClientResponseException.class, e -> {
-        if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
-            // Book not found, build and save rejected order
-            Order rejectedOrder = buildRejectedOrder(isbn, quantity);
-            return orderRepository.save(rejectedOrder);
-        }
-        return Mono.error(e);
-    });
-
+    return bookClient
+      .getBookByIsbn(isbn)
+      .map(book -> buildAcceptedOrder(book, quantity))
+      .defaultIfEmpty(buildRejectedOrder(isbn, quantity))
+      .flatMap(orderRepository::save);
   }
 
   public static Order buildAcceptedOrder(Book book, int quantity) {
